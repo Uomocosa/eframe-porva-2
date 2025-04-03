@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-// use crate::component::{MadeWithEgui, SimpleTopMenuBar};
-use crate::component::SimpleTopMenuBar;
+use crate::component::{MadeWithEgui, SimpleTopMenuBar};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(Serialize, Deserialize)]
@@ -68,7 +67,7 @@ impl eframe::App for TemplateApp {
             //     self.value += 1.0;
             // }
 
-            // MadeWithEgui::ui(ui);
+            MadeWithEgui::ui(ui);
         });
     }
 }
