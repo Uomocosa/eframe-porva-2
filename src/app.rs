@@ -1,6 +1,9 @@
+use core::f32;
+
+use egui::{epaint::RectShape, Color32, FontFamily, FontId, Pos2, Rect, Rounding, Shape, Stroke, TextEdit, TextureId, Vec2};
 use serde::{Deserialize, Serialize};
 
-use crate::component::{MadeWithEgui, SimpleTopMenuBar};
+use crate::component::{MadeWithEgui, SimpleTopMenuBar, TextEditSingleline, TransparentLabel};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(Serialize, Deserialize)]
@@ -10,6 +13,10 @@ pub struct TemplateApp {
     label: String,
     #[serde(skip)] // This how you opt-out of serialization of a field
     value: f32,
+
+    was_single_line_focused: bool,
+    signleline_text: String,
+    signleline_hint_text: String,
 }
 
 impl Default for TemplateApp {
@@ -17,6 +24,10 @@ impl Default for TemplateApp {
         Self {
             label: "Hello World!".to_owned(),
             value: 2.7,
+
+            was_single_line_focused: false,
+            signleline_text: "".to_string(),
+            signleline_hint_text: "Write here :)".to_owned(),
         }
     }
 }
@@ -49,24 +60,58 @@ impl eframe::App for TemplateApp {
             SimpleTopMenuBar::ui(ui);
         });
 
+        let font_size: f32 = 100.0;
+        let char_limit: usize = 250;
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("eframe-porva-002");
-            ui.heading("eframe-porva-002");
-            
-            // let mut open = true;
-            // UndoRedoText::default().window(ctx, ui, &mut open);
-            // self.undo_redo_text.ui(ui);
+            let mut singleline = TextEdit::singleline(&mut self.signleline_text)
+                .hint_text(&self.signleline_hint_text)
+                .font(FontId::new(font_size, FontFamily::default()))
+                .cursor_at_end(true)
+                .desired_width(f32::INFINITY)
+                .char_limit(char_limit)
+                .show(ui);
 
-            // ui.horizontal(|ui| {
-            //     ui.label("Write something: ");
-            //     ui.text_edit_singleline(&mut self.label);
-            // });
+            // This attempts to fix a bug: if you click on the upper-half of the singleline 
+            // It will put the cursor at the BEGINNING istead that at the END.
+            if !self.was_single_line_focused && singleline.response.has_focus() {
+                self.was_single_line_focused = true;
+                TextEditSingleline::set_cursor_at_end(&mut singleline, ui);
+            }
+            else if self.was_single_line_focused && singleline.response.lost_focus() {
+                self.was_single_line_focused = false;
+            }
+           
+            let font_id = FontId::default(); // To generalize
+            let size = Vec2::new(font_id.size *2.0, font_id.size * 1.0);
+            let margin = 0.075*singleline.response.rect.size().y;
+            let refs = Pos2::new(
+                singleline.response.rect.max.x - margin,
+                singleline.response.rect.min.y + margin,
+            );
+            let a = Pos2::new(
+                refs.x - size.x,
+                refs.y,
+            );
+            let b = Pos2::new(
+                refs.x,
+                refs.y + size.y,
+            );
 
-            // ui.add(egui::Slider::new(&mut self.value, 0.0..=10.0).text("value"));
-            // if ui.button("Increments").clicked() {
-            //     self.value += 1.0;
-            // }
+            let label = TransparentLabel::default(ui);
+            label.ui(ui);
+
+            let shape = Shape::Rect(RectShape { 
+                rect: Rect::from_two_pos(a, b),
+                rounding: Rounding::same(5.0),
+                fill: Color32::from_rgb(125, 125, 125),
+                stroke: Stroke::NONE,
+                blur_width: 0.0, 
+                fill_texture_id: TextureId::default(), 
+                uv: Rect::ZERO,
+            });
+            ui.painter().add(shape);
 
             MadeWithEgui::ui(ui);
         });
