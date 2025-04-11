@@ -28,6 +28,34 @@ impl TransparentLabel {
         }
     }
 
+    pub fn create(text: String, fallback_color: Color32, opacity:f32, ui: &mut Ui) -> Self {
+        let label = Label::new(text.clone());
+        let (pos, galley, response) = label.layout_in_ui(ui);
+        Self { 
+            text, 
+            pos, 
+            galley, 
+            opacity,
+            fallback_color,
+            response, 
+        }
+    }
+
+    pub fn simple_text(text: String, ui: &mut Ui) -> Self {
+        let label = Label::new(text.clone());
+        let (pos, galley, response) = label.layout_in_ui(ui);
+        let fallback_color = Color32::from_rgb(100, 100, 100);
+        let opacity = 0.75;
+        Self { 
+            text, 
+            pos, 
+            galley, 
+            opacity,
+            fallback_color,
+            response, 
+        }
+    }
+
     pub fn ui(&self, ui: &mut Ui) {
         let ui_builder = egui::UiBuilder::new();
         ui.scope_builder(ui_builder, |ui| {
