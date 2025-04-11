@@ -1,9 +1,9 @@
 use core::f32;
 
-use egui::{epaint::RectShape, Color32, FontFamily, FontId, Pos2, Rect, Rounding, Shape, Stroke, TextEdit, TextureId, Vec2};
+use egui::{epaint::{RectShape, TextShape}, Color32, FontFamily, FontId, Pos2, Rect, Rounding, Shape, Stroke, TextEdit, TextureId, Vec2};
 use serde::{Deserialize, Serialize};
 
-use crate::component::{MadeWithEgui, SimpleTopMenuBar, TextEditSingleline, TransparentLabel};
+use crate::{component::{MadeWithEgui, SimpleTopMenuBar, TextEditSingleline}, utility::{get_galley_from_str, green_to_red_linear_gradient}};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(Serialize, Deserialize)]
@@ -17,6 +17,8 @@ pub struct TemplateApp {
     was_single_line_focused: bool,
     signleline_text: String,
     signleline_hint_text: String,
+
+    char_countdown_background_size: Vec2,
 }
 
 impl Default for TemplateApp {
@@ -28,6 +30,8 @@ impl Default for TemplateApp {
             was_single_line_focused: false,
             signleline_text: "".to_string(),
             signleline_hint_text: "Write here :)".to_owned(),
+
+            char_countdown_background_size: Vec2::new(30.0, 15.0),
         }
     }
 }
@@ -73,7 +77,7 @@ impl eframe::App for TemplateApp {
                 .char_limit(char_limit)
                 .show(ui);
 
-            // This attempts to fix a bug: if you click on the upper-half of the singleline 
+            // This attempts to fix a bug: if you click at the top of the [singleline] "block"
             // It will put the cursor at the BEGINNING istead that at the END.
             if !self.was_single_line_focused && singleline.response.has_focus() {
                 self.was_single_line_focused = true;
@@ -82,36 +86,61 @@ impl eframe::App for TemplateApp {
             else if self.was_single_line_focused && singleline.response.lost_focus() {
                 self.was_single_line_focused = false;
             }
-           
-            let font_id = FontId::default(); // To generalize
-            let size = Vec2::new(font_id.size *2.0, font_id.size * 1.0);
+
             let margin = 0.075*singleline.response.rect.size().y;
             let refs = Pos2::new(
                 singleline.response.rect.max.x - margin,
                 singleline.response.rect.min.y + margin,
             );
             let a = Pos2::new(
-                refs.x - size.x,
+                refs.x - self.char_countdown_background_size.x,
                 refs.y,
             );
             let b = Pos2::new(
                 refs.x,
-                refs.y + size.y,
+                refs.y + self.char_countdown_background_size.y,
             );
 
-            let label = TransparentLabel::default(ui);
-            label.ui(ui);
+            let remaining_chars = char_limit - self.signleline_text.len();
+            if remaining_chars <= 100 {
+                let shape = Shape::Rect(RectShape{ 
+                    rect: Rect::from_two_pos(a, b),
+                    rounding: Rounding::same(5.0),
+                    fill: Color32::from_rgb(125, 125, 125),
+                    stroke: Stroke::NONE,
+                    blur_width: 0.0, 
+                    fill_texture_id: TextureId::default(), 
+                    uv: Rect::ZERO,
+                });
+                
+                
 
-            let shape = Shape::Rect(RectShape { 
-                rect: Rect::from_two_pos(a, b),
-                rounding: Rounding::same(5.0),
-                fill: Color32::from_rgb(125, 125, 125),
-                stroke: Stroke::NONE,
-                blur_width: 0.0, 
-                fill_texture_id: TextureId::default(), 
-                uv: Rect::ZERO,
-            });
-            ui.painter().add(shape);
+                let galley = get_galley_from_str(
+                    remaining_chars.to_string(), 
+                    egui::Align::Center, 
+                    ui
+                );
+                // debug!(ui, "galley.rect.center() = {:?}", galley.rect.center());
+                // debug!(ui, "galley.mesh_bounds.center() = {:?}", galley.mesh_bounds.center());
+                let galley_center = (galley.rect.center() + galley.mesh_bounds.center().to_vec2()) / 2.0;
+                let pos = Pos2::new(
+                    a.x + (b.x-a.x)/2.0 - galley_center.x,
+                    a.y + (b.y-a.y)/2.0 - galley_center.y,
+                );
+                let fallback_color = green_to_red_linear_gradient((remaining_chars as f32)/(char_limit as f32));
+                let text = Shape::Text(TextShape{
+                    pos,
+                    galley,
+                    underline: Stroke::NONE,
+                    fallback_color,
+                    override_text_color: None,
+                    opacity_factor: 1.0,
+                    angle: 0.0,
+                });
+
+                ui.painter().add(shape);
+                ui.painter().add(text);
+            }
 
             MadeWithEgui::ui(ui);
         });
