@@ -1,9 +1,16 @@
 use core::f32;
 
-use egui::{epaint::{RectShape, TextShape}, Color32, FontFamily, FontId, Pos2, Rect, Rounding, Shape, Stroke, TextEdit, TextureId, Vec2};
+use egui::{
+    epaint::{RectShape, TextShape},
+    Color32, FontFamily, FontId, Pos2, Rect, Rounding, ScrollArea, Shape, Stroke, TextEdit,
+    TextStyle, TextureId, Vec2,
+};
 use serde::{Deserialize, Serialize};
 
-use crate::{component::{MadeWithEgui, SimpleTopMenuBar, TextEditSingleline}, utility::{get_galley_from_str, green_to_red_linear_gradient}};
+use crate::{
+    component::{MadeWithEgui, SimpleTopMenuBar, TextEditSingleline},
+    utility::{get_galley_from_str, green_to_red_linear_gradient},
+};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(Serialize, Deserialize)]
@@ -16,6 +23,7 @@ pub struct TemplateApp {
     signleline_hint_text: String,
 
     char_countdown_background_size: Vec2,
+    row_to_show: usize,
 }
 
 impl Default for TemplateApp {
@@ -26,6 +34,7 @@ impl Default for TemplateApp {
             signleline_hint_text: "Write here :)".to_owned(),
 
             char_countdown_background_size: Vec2::new(30.0, 15.0),
+            row_to_show: 0,
         }
     }
 }
@@ -76,53 +85,43 @@ impl eframe::App for TemplateApp {
             if !self.was_single_line_focused && singleline.response.has_focus() {
                 self.was_single_line_focused = true;
                 TextEditSingleline::set_cursor_at_end(&mut singleline, ui);
-            }
-            else if self.was_single_line_focused && singleline.response.lost_focus() {
+            } else if self.was_single_line_focused && singleline.response.lost_focus() {
                 self.was_single_line_focused = false;
             }
 
-            let margin = 0.075*singleline.response.rect.size().y;
+            let margin = 0.075 * singleline.response.rect.size().y;
             let refs = Pos2::new(
                 singleline.response.rect.max.x - margin,
                 singleline.response.rect.min.y + margin,
             );
-            let a = Pos2::new(
-                refs.x - self.char_countdown_background_size.x,
-                refs.y,
-            );
-            let b = Pos2::new(
-                refs.x,
-                refs.y + self.char_countdown_background_size.y,
-            );
+            let a = Pos2::new(refs.x - self.char_countdown_background_size.x, refs.y);
+            let b = Pos2::new(refs.x, refs.y + self.char_countdown_background_size.y);
 
             let remaining_chars = char_limit - self.signleline_text.len();
             if remaining_chars <= 100 {
-                let shape = Shape::Rect(RectShape{ 
+                let shape = Shape::Rect(RectShape {
                     rect: Rect::from_two_pos(a, b),
                     rounding: Rounding::same(5.0),
                     fill: Color32::from_rgb(125, 125, 125),
                     stroke: Stroke::NONE,
-                    blur_width: 0.0, 
-                    fill_texture_id: TextureId::default(), 
+                    blur_width: 0.0,
+                    fill_texture_id: TextureId::default(),
                     uv: Rect::ZERO,
                 });
-                
-                
 
-                let galley = get_galley_from_str(
-                    remaining_chars.to_string(), 
-                    egui::Align::Center, 
-                    ui
-                );
+                let galley =
+                    get_galley_from_str(remaining_chars.to_string(), egui::Align::Center, ui);
                 // debug!(ui, "galley.rect.center() = {:?}", galley.rect.center());
                 // debug!(ui, "galley.mesh_bounds.center() = {:?}", galley.mesh_bounds.center());
-                let galley_center = (galley.rect.center() + galley.mesh_bounds.center().to_vec2()) / 2.0;
+                let galley_center =
+                    (galley.rect.center() + galley.mesh_bounds.center().to_vec2()) / 2.0;
                 let pos = Pos2::new(
-                    a.x + (b.x-a.x)/2.0 - galley_center.x,
-                    a.y + (b.y-a.y)/2.0 - galley_center.y,
+                    a.x + (b.x - a.x) / 2.0 - galley_center.x,
+                    a.y + (b.y - a.y) / 2.0 - galley_center.y,
                 );
-                let fallback_color = green_to_red_linear_gradient((remaining_chars as f32)/(char_limit as f32));
-                let text = Shape::Text(TextShape{
+                let fallback_color =
+                    green_to_red_linear_gradient((remaining_chars as f32) / (char_limit as f32));
+                let text = Shape::Text(TextShape {
                     pos,
                     galley,
                     underline: Stroke::NONE,
@@ -136,9 +135,25 @@ impl eframe::App for TemplateApp {
                 ui.painter().add(text);
             }
 
+            ui.add_space(4.0);
+            self.row_to_show += 1;
+
+            let text_style = TextStyle::Body;
+            let row_height = ui.text_style_height(&text_style);
+            ScrollArea::vertical().stick_to_bottom(true).show_rows(
+                ui,
+                row_height,
+                self.row_to_show,
+                |ui, row_range| {
+                    for row in row_range {
+                        let text = format!("This is row {}", row + 1);
+                        ui.label(text);
+                    }
+                },
+            );
+            ui.ctx().request_repaint(); // otherwise if the user does nothing, the "update stops"
+
             MadeWithEgui::ui(ui);
         });
     }
 }
-
-

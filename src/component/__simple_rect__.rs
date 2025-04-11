@@ -4,9 +4,9 @@ pub struct SimpleRect;
 
 impl SimpleRect {
     pub fn shape() -> RectShape {
-        let p1 = Pos2{ x: 0.0, y: 0.0 };
-        let p2 = Pos2{ x: 100.0, y: 100.0 };
-        let rect = Rect{ min: p1, max: p2 };
+        let p1 = Pos2 { x: 0.0, y: 0.0 };
+        let p2 = Pos2 { x: 100.0, y: 100.0 };
+        let rect = Rect { min: p1, max: p2 };
         let rounding = Rounding {
             nw: 0.5,
             ne: 0.5,

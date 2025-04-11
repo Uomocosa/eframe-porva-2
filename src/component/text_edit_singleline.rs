@@ -13,7 +13,11 @@ impl TextEditSingleline {
         TextEdit::singleline(text).show(ui)
     }
 
-    pub fn set_cursor(singleline: &mut TextEditOutput, cc_range: Option<CCursorRange>, ui: &mut egui::Ui) {
+    pub fn set_cursor(
+        singleline: &mut TextEditOutput,
+        cc_range: Option<CCursorRange>,
+        ui: &mut egui::Ui,
+    ) {
         let text_edit_id = singleline.response.id;
         if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), text_edit_id) {
             state.cursor.set_char_range(cc_range);

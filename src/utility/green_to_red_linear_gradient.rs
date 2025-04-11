@@ -1,6 +1,6 @@
 use egui::Color32;
 
-pub fn green_to_red_linear_gradient(x: f32) -> Color32{
+pub fn green_to_red_linear_gradient(x: f32) -> Color32 {
     // Clamp x to the valid range [0.0, 1.0] to avoid unexpected results
     let x_clamped = x.clamp(0.0, 1.0);
 

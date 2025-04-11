@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use egui::{Color32, Galley, Label, Pos2, Response, Ui};
 
-pub struct TransparentLabel{
+pub struct TransparentLabel {
     pub text: String,
     pub pos: Pos2,
     pub galley: Arc<Galley>,
@@ -18,26 +18,26 @@ impl TransparentLabel {
         let (pos, galley, response) = label.layout_in_ui(ui);
         let fallback_color = Color32::from_rgb(100, 100, 100);
         let opacity = 0.75;
-        Self { 
-            text: text.to_string(), 
-            pos, 
-            galley, 
+        Self {
+            text: text.to_string(),
+            pos,
+            galley,
             opacity,
             fallback_color,
-            response, 
+            response,
         }
     }
 
-    pub fn create(text: String, fallback_color: Color32, opacity:f32, ui: &mut Ui) -> Self {
+    pub fn create(text: String, fallback_color: Color32, opacity: f32, ui: &mut Ui) -> Self {
         let label = Label::new(text.clone());
         let (pos, galley, response) = label.layout_in_ui(ui);
-        Self { 
-            text, 
-            pos, 
-            galley, 
+        Self {
+            text,
+            pos,
+            galley,
             opacity,
             fallback_color,
-            response, 
+            response,
         }
     }
 
@@ -46,13 +46,13 @@ impl TransparentLabel {
         let (pos, galley, response) = label.layout_in_ui(ui);
         let fallback_color = Color32::from_rgb(100, 100, 100);
         let opacity = 0.75;
-        Self { 
-            text, 
-            pos, 
-            galley, 
+        Self {
+            text,
+            pos,
+            galley,
             opacity,
             fallback_color,
-            response, 
+            response,
         }
     }
 

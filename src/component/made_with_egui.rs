@@ -3,12 +3,12 @@ pub struct MadeWithEgui;
 impl MadeWithEgui {
     pub fn ui(ui: &mut egui::Ui) {
         ui.separator();
-    
+
         ui.add(egui::github_link_file!(
             "https://github.com/emilk/eframe_template/blob/main/",
             "Source code."
         ));
-    
+
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             ui.horizontal(|ui| {
                 ui.spacing_mut().item_spacing.x = 0.0;

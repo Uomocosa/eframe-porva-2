@@ -1,7 +1,7 @@
 pub struct SimpleTopMenuBar;
 
 impl SimpleTopMenuBar {
-    pub fn ui(ui:&mut egui::Ui) {
+    pub fn ui(ui: &mut egui::Ui) {
         egui::menu::bar(ui, |ui| {
             // NOTE: no File->Quit on web pages!
             let is_web = cfg!(target_arch = "wasm32");
